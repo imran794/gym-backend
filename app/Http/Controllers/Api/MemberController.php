@@ -50,7 +50,15 @@ class MemberController extends Controller
 
         try {
 
-            $photo = $this->image_upload($request->phote, 'members');
+         if ($request->hasFile('photo')) {
+                $file = $request->file('photo');
+                $extension = $file->getClientOriginalExtension();
+                $filename = time().".".$extension;
+                $file->move('uploads/member/',$filename);
+                $photo = $filename;
+
+            }
+
 
           $member = Member::create([
               'member_id'     => uniqid(),
@@ -59,9 +67,12 @@ class MemberController extends Controller
               'mobile'        => $request->mobile,
               'blood_group'   => $request->blood_group,
               'address'       => $request->address,
-              'photo'         => $photo['path'],
+              'photo'         => $photo,
               'created_by'    => Auth::id()
            ]);
+
+          
+
 
           $member->member_id = date('Y') . str_pad($member->id, 6, 0, STR_PAD_LEFT);
           $member->save();
@@ -73,21 +84,7 @@ class MemberController extends Controller
         }
     }
 
-    public function image_upload($image, $dir)
-    {
-        $file       = explode(';base64,', $image);
-        $file1      = explode('/', $file[0]);
-        $exten      = end($file1);
-        $file_name  =  uniqid().date('-Ymd-his'). $exten;
-        $image_data = str_replace(',','', $file[1]);
-
-        Storage::disk('public')->put($dir . "/" . $file_name, base64_decode($image_data));
-
-        return  [
-            'name' => $file_name,
-            'path' => Storage::disk('public')->url($dir . "/" . $file_name)
-        ];
-    }
+  
 
     /**
      * Display the specified resource.
@@ -110,7 +107,61 @@ class MemberController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $members =  Member::find($id);
+
+        if ($members) {
+            $validator = Validator::make($request->all(),[
+            'name'         => 'required|max:50',
+            'gender'       => 'required',
+            'mobile'       => 'required|min:11|max:11|unique:members,' .$id,
+            'blood_group'  => 'required',
+            'address'      => 'required',
+        ]);
+
+        // if ($validator->fails()) {
+
+        //     return response()->json([
+        //         'success'   => false,
+        //         'errors'    => $validator->errors()
+        //     ]);
+        // }
+
+        try {
+
+               if ($request->hasFile('photo')) {
+
+                $image_path = 'uploads/member/'.$members->photo;
+
+                  if (File::exists($image_path)) {
+                  File::delete($image_path);
+                }
+
+                $file = $request->file('photo');
+                $extension = $file->getClientOriginalExtension();
+                $filename = time().".".$extension;
+                $file->move('uploads/member/',$filename);
+                $members->photo = $filename;
+
+            }
+
+             $members->name             = $request->name;
+             $members->gender           = $request->gender;
+             $members->mobile           = $request->mobile;
+             $members->blood_group      = $request->blood_group;
+             $members->address          = $request->address;
+             $members->photo            = $request->photo;
+             $members->member_id         = date('Y') . str_pad($members->id, 6, 0, STR_PAD_LEFT);
+             $members->save();
+
+          return success_response($member,__('message.member.create.update'));
+            
+        } catch (Exception $e) {
+            return error_response(__('message.member.manage.not_found'));
+        }
+
+        }else{
+               return error_response(__('message.member.manage.not_found')); 
+        }
     }
 
     /**

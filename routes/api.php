@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MemberController;
+use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\ExpenseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,7 +25,9 @@ Route::prefix('v1')->group(function(){
 
     Route::group(['middleware' => 'auth:api'], function() {
         Route::apiResources([
-        'members'  => MemberController::class
+        'members'    => MemberController::class,
+        'invoices'   => InvoiceController::class,
+        'expenses'   => ExpenseController::class,
        ]);
 
     });

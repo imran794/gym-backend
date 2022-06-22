@@ -28,7 +28,7 @@ return [
 		],
 		'update' => [
 			'errors'    => "Opps! unable to create a new member",
-			'success'   => "Yay! A member has been successfully updated."
+			'update'   => "Yay! A member has been successfully updated."
 		],
 
          'manage' => [
